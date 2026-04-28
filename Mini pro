@@ -1,0 +1,101 @@
+import pandas as pd
+import numpy as np
+import matplotlib.pyplot as plt
+
+# -----------------------------
+# STEP 1: Create Dataset
+# -----------------------------
+np.random.seed(42)
+n = 100
+
+data = {
+    "Patient_ID": [f"P{i+1:03d}" for i in range(n)],
+    "Age": np.random.randint(20, 80, n),
+    "Gender": np.random.choice(["Male", "Female"], n),
+    "Department": np.random.choice(["Cardiology", "Orthopedics", "Neurology"], n),
+    "Admission_Type": np.random.choice(["Emergency", "Elective"], n, p=[0.6, 0.4]),
+    "Bed_Type": np.random.choice(["ICU", "General", "Private"], n),
+    "Treatment_Type": np.random.choice(["Surgery", "Medication"], n),
+    "Doctor_ID": np.random.choice(["D101", "D102", "D103"], n)
+}
+
+df = pd.DataFrame(data)
+
+# Dates
+df["Admission_Date"] = pd.to_datetime("2025-01-01") + pd.to_timedelta(np.random.randint(0, 60, n), unit='D')
+df["Length_of_Stay"] = np.random.randint(2, 10, n)
+df["Discharge_Date"] = df["Admission_Date"] + pd.to_timedelta(df["Length_of_Stay"], unit='D')
+
+# Cost
+df["Cost"] = np.where(df["Treatment_Type"] == "Surgery",
+                      np.random.randint(40000, 100000, n),
+                      np.random.randint(10000, 30000, n))
+
+# Save dataset
+df.to_csv("hospital_data_generated.csv", index=False)
+
+print("Dataset created successfully!\n")
+print(df.head())
+
+# -----------------------------
+# STEP 2: Analysis
+# -----------------------------
+print("\n--- Descriptive Statistics ---")
+print(df.describe())
+
+# Grouping
+los = df.groupby("Department")["Length_of_Stay"].mean()
+bed_usage = df["Bed_Type"].value_counts()
+admission = df["Admission_Type"].value_counts()
+cost = df.groupby("Department")["Cost"].mean()
+doctor = df["Doctor_ID"].value_counts()
+
+print("\nAverage Length of Stay:\n", los)
+print("\nBed Usage:\n", bed_usage)
+print("\nAdmission Type:\n", admission)
+print("\nAverage Cost per Department:\n", cost)
+print("\nDoctor Workload:\n", doctor)
+
+# -----------------------------
+# STEP 3: Visualization
+# -----------------------------
+
+# 1. Length of Stay (Bar Chart)
+plt.figure()
+plt.bar(los.index, los.values, color='blue')
+plt.title("Average Length of Stay by Department")
+plt.xlabel("Department")
+plt.ylabel("Days")
+plt.show()
+
+# 2. Bed Usage
+plt.figure()
+plt.bar(bed_usage.index, bed_usage.values, color='green')
+plt.title("Bed Type Usage")
+plt.xlabel("Bed Type")
+plt.ylabel("Count")
+plt.show()
+
+# 3. Admission Type (Pie Chart)
+plt.figure()
+plt.pie(admission.values, labels=admission.index, autopct='%1.1f%%')
+plt.title("Admission Type Distribution")
+plt.show()
+
+# 4. Cost per Department
+plt.figure()
+plt.bar(cost.index, cost.values, color='red')
+plt.title("Average Cost per Department")
+plt.xlabel("Department")
+plt.ylabel("Cost")
+plt.show()
+
+# -----------------------------
+# STEP 4: Insights
+# -----------------------------
+print("\n--- Insights ---")
+print("1. Departments with longer stays need more bed allocation.")
+print("2. ICU usage indicates demand for critical care resources.")
+print("3. Emergency admissions are higher → require faster response systems.")
+print("4. Doctor workload should be balanced across departments.")
+print("5. High-cost departments need cost optimization strategies.")
